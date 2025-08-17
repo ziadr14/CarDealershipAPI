@@ -128,25 +128,35 @@ The project is divided into three main layers:
 
 
 CarDealershipAPI/
+│── CarDealershipAPI/                 # API Layer
+│   ├── Controllers/
+│   │   └── CarsController.cs
+│   ├── DTOs/
+│   │   └── CarDto.cs
+│   ├── Program.cs
 │
-├── CarDealershipAPI/ # API Layer (Controllers, Startup, Program.cs)
-│ ├── Controllers/ # API endpoints
-│ ├── DTOs/ # Data Transfer Objects
-│ ├── Properties/
-│ ├── obj/
-│ └── Program.cs
+│── CarDealershipBLL/                 # Business Logic Layer
+│   ├── Interfaces/
+│   │   └── ICarService.cs
+│   ├── Services/
+│   │   └── CarService.cs
+│   ├── DTOs/
+│   │   └── CarDto.cs
+│   ├── Mappings/
+│   │   └── AutoMapperProfile.cs
 │
-├── CarDealershipBLL/ # Business Logic Layer
-│ ├── Interfaces/ # Service interfaces
-│ ├── Services/ # Service implementations
-│ ├── DTOs/ # DTO definitions
-│ └── Mappings/ # AutoMapper profiles
+│── CarDealershipDAL/                 # Data Access Layer
+│   ├── Models/
+│   │   └── Car.cs
+│   ├── Interfaces/
+│   │   └── IGenericRepository.cs
+│   │   └── ICarRepository.cs
+│   ├── Repositories/
+│   │   └── GenericRepository.cs
+│   │   └── CarRepository.cs
+│   │   └── UnitOfWork.cs
+│   ├── Data/
+│   │   └── AppDbContext.cs
+│   └── Migrations/
 │
-├── CarDealershipDAL/ # Data Access Layer
-│ ├── Models/ # Entity models
-│ ├── Interfaces/ # Repository interfaces
-│ ├── Repositories/ # Repository implementations
-│ ├── Data/ # DbContext
-│ └── Migrations/ # EF Core migrations
-│
-└── CarDealershipAPI.sln # Solution file
+└── CarDealershipAPI.sln
