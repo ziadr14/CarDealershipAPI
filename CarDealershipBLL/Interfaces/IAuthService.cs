@@ -1,5 +1,6 @@
 ﻿using CarDealershipBLL.DTOs;
 using CarDealershipDAL.Models;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace CarDealershipBLL.Interfaces
 {
     public interface IAuthService
     {
-        Task<Users?> Register(Users userDto);
-        Task<string> Login(LoginDto userDto);
+        Task<AuthResponseDto> LoginAsync(LoginDto model);
+        Task<string> RegisterAsync(RegisterDto model);
     }
 }

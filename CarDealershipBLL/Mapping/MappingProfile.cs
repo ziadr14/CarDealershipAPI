@@ -25,7 +25,10 @@ namespace CarDealershipBLL.Mapping
 
             CreateMap<Customer, CustomerDto>().ReverseMap();
 
-            CreateMap<Branch, BranchDto>().ReverseMap();
+
+            CreateMap<Branch, BranchDto>();
+            CreateMap<BranchDto, Branch>()
+                .ForMember(dest => dest.BranchId, opt => opt.Ignore());
 
             CreateMap<Sale, SaleDto>()
                 .ForMember(dest => dest.CarId,

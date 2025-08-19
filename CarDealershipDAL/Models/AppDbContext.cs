@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 
 namespace CarDealershipDAL.Models;
 
-public partial class AppDbContext : DbContext
+public partial class AppDbContext:IdentityDbContext<AppUser>
 {
 
 
@@ -23,7 +24,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Customer> Customers { get; set; }
 
     public virtual DbSet<Sale> Sales { get; set; }
-    public virtual DbSet<Users> Users { get; set; }
 
 
 

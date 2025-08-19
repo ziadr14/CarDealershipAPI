@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Threading.Tasks;
 
 namespace CarDealershipBLL.Services
@@ -25,146 +24,213 @@ namespace CarDealershipBLL.Services
 
         public async Task<IEnumerable<SaleDto>> GetAllSalesAsync()
         {
-            var sales = await _repo.Sales.GetAllSales()
-                .Include(s => s.Car)
-                .Include(s => s.Customer)
-                .Select(s => new SaleDto
-                {
-                    SaleId = s.SaleId,
-                    BranchId = s.BranchId,
-                    BranchName = s.Branch.BranchName,
-                    CarId = s.CarId,
-                    CarModel = s.Car.Model,
-                    CustomerId = s.CustomerId,
-                    CoustomerName = s.Customer.FullName,
-                    SalePrice = s.SalePrice,
-                    SaleDate = s.SaleDate,
-                    
-                    
-                }).ToListAsync();
+            try
+            {
+                var sales = await _repo.Sales.GetAllSales()
+                    .Include(s => s.Car)
+                    .Include(s => s.Customer)
+                    .Select(s => new SaleDto
+                    {
+                        SaleId = s.SaleId,
+                        BranchId = s.BranchId,
+                        BranchName = s.Branch.BranchName,
+                        CarId = s.CarId,
+                        CarModel = s.Car.Model,
+                        CustomerId = s.CustomerId,
+                        CoustomerName = s.Customer.FullName,
+                        SalePrice = s.SalePrice,
+                        SaleDate = s.SaleDate,
+                    }).ToListAsync();
 
-            return sales;
+                return sales;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAllSalesAsync: {ex.Message}");
+                return new List<SaleDto>();
+            }
         }
 
         public async Task<SaleDto> GetSaleByIdAsync(int id)
         {
-            var sale = await _repo.Sales.GetSalesById(id).Select(s => new SaleDto
+            try
             {
-                SaleId = s.SaleId,
-                BranchId = s.BranchId,
-                BranchName = s.Branch.BranchName,
-                CarId = s.CarId,
-                CarModel = s.Car.Model,
-                CustomerId = s.CustomerId,
-                CoustomerName = s.Customer.FullName,
-                SalePrice = s.SalePrice,
-                SaleDate = s.SaleDate,
+                var sale = await _repo.Sales.GetSalesById(id).Select(s => new SaleDto
+                {
+                    SaleId = s.SaleId,
+                    BranchId = s.BranchId,
+                    BranchName = s.Branch.BranchName,
+                    CarId = s.CarId,
+                    CarModel = s.Car.Model,
+                    CustomerId = s.CustomerId,
+                    CoustomerName = s.Customer.FullName,
+                    SalePrice = s.SalePrice,
+                    SaleDate = s.SaleDate,
+                }).FirstOrDefaultAsync();
 
-            }).FirstOrDefaultAsync();
-            return sale;
+                return sale;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetSaleByIdAsync: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<SaleDto> CreateSaleAsync(SaleDto saleDto)
         {
+            try
+            {
+                var sale = _mapper.Map<Sale>(saleDto);
 
-            var sale = _mapper.Map<Sale>(saleDto);
-
-            await _repo.Sales.AddAsync(sale);
-            await _repo.SaveAsync();
-            return _mapper.Map<SaleDto>(sale);
+                await _repo.Sales.AddAsync(sale);
+                await _repo.SaveAsync();
+                return _mapper.Map<SaleDto>(sale);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CreateSaleAsync: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<bool> UpdateSaleAsync(int id, SaleDto saleDto)
         {
-            var existingSale = await _repo.Sales.GetByIdAsync(id);
-            if (existingSale == null) return false;
+            try
+            {
+                var existingSale = await _repo.Sales.GetByIdAsync(id);
+                if (existingSale == null) return false;
 
-            _mapper.Map(saleDto, existingSale);
-            _repo.Sales.UpdateAsync(existingSale);
-            await _repo.SaveAsync();
-            return true;
+                _mapper.Map(saleDto, existingSale);
+                _repo.Sales.UpdateAsync(existingSale);
+                await _repo.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in UpdateSaleAsync: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<bool> DeleteSaleAsync(int id)
         {
-            var existingSale = await _repo.Sales.GetByIdAsync(id);
-            if (existingSale == null) return false;
+            try
+            {
+                var existingSale = await _repo.Sales.GetByIdAsync(id);
+                if (existingSale == null) return false;
 
-            _repo.Sales.DeleteAsync(existingSale);
-            await _repo.SaveAsync();
-            return true;
+                _repo.Sales.DeleteAsync(existingSale);
+                await _repo.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in DeleteSaleAsync: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<IEnumerable<SaleDto>> GetSalesByCustomerIdAsync(int customerId)
         {
-            var sales = await _repo.Sales.GetAllSales()
-                .Where(s => s.CustomerId == customerId)
-                .Include(s => s.Car)
-                .Include(s => s.Customer)
-                .Select(s => new SaleDto
-                {
-                    SaleId = s.SaleId,
-                    BranchId = s.BranchId,
-                    BranchName = s.Branch.BranchName,
-                    CarId = s.CarId,
-                    CarModel = s.Car.Model,
-                    CustomerId = s.CustomerId,
-                    CoustomerName = s.Customer.FullName,
-                    SalePrice = s.SalePrice,
-                    SaleDate = s.SaleDate,
-                }).ToListAsync();
+            try
+            {
+                var sales = await _repo.Sales.GetAllSales()
+                    .Where(s => s.CustomerId == customerId)
+                    .Include(s => s.Car)
+                    .Include(s => s.Customer)
+                    .Select(s => new SaleDto
+                    {
+                        SaleId = s.SaleId,
+                        BranchId = s.BranchId,
+                        BranchName = s.Branch.BranchName,
+                        CarId = s.CarId,
+                        CarModel = s.Car.Model,
+                        CustomerId = s.CustomerId,
+                        CoustomerName = s.Customer.FullName,
+                        SalePrice = s.SalePrice,
+                        SaleDate = s.SaleDate,
+                    }).ToListAsync();
 
-            return sales;
+                return sales;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetSalesByCustomerIdAsync: {ex.Message}");
+                return new List<SaleDto>();
+            }
         }
 
         public async Task<IEnumerable<SaleDto>> GetSalesByDateRangeAsync(DateTime start, DateTime end)
         {
-            var sales = await _repo.Sales.GetAllSales()
-                .Where(s => s.SaleDate >= start && s.SaleDate <= end)
-                .Include(s => s.Car)
-                .Include(s => s.Customer)
-                .Select(s => new SaleDto
-                {
-                    SaleId = s.SaleId,
-                    BranchId = s.BranchId,
-                    BranchName = s.Branch.BranchName,
-                    CarId = s.CarId,
-                    CarModel = s.Car.Model,
-                    CustomerId = s.CustomerId,
-                    CoustomerName = s.Customer.FullName,
-                    SalePrice = s.SalePrice,
-                    SaleDate = s.SaleDate,
-                }).ToListAsync();
+            try
+            {
+                var sales = await _repo.Sales.GetAllSales()
+                    .Where(s => s.SaleDate >= start && s.SaleDate <= end)
+                    .Include(s => s.Car)
+                    .Include(s => s.Customer)
+                    .Select(s => new SaleDto
+                    {
+                        SaleId = s.SaleId,
+                        BranchId = s.BranchId,
+                        BranchName = s.Branch.BranchName,
+                        CarId = s.CarId,
+                        CarModel = s.Car.Model,
+                        CustomerId = s.CustomerId,
+                        CoustomerName = s.Customer.FullName,
+                        SalePrice = s.SalePrice,
+                        SaleDate = s.SaleDate,
+                    }).ToListAsync();
 
-            return sales;
+                return sales;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetSalesByDateRangeAsync: {ex.Message}");
+                return new List<SaleDto>();
+            }
         }
 
         public async Task<decimal> GetTotalRevenueAsync()
         {
-            return await _repo.Sales.GetAllSales().SumAsync(s => s.SalePrice);
+            try
+            {
+                return await _repo.Sales.GetAllSales().SumAsync(s => s.SalePrice);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetTotalRevenueAsync: {ex.Message}");
+                return 0;
+            }
         }
 
         public async Task<IEnumerable<TopSellingCarDto>> GetTopSellingCarsAsync(int count)
         {
-            var topCars = await _repo.Sales.GetAllSales()
-                .Include(s => s.Car)
-                .ThenInclude(c => c.Brand)
-                .GroupBy(s => new { s.CarId, s.Car.Model, s.Car.Brand.BrandName })
-                .Select(g => new TopSellingCarDto
-                {
-                    CarId = g.Key.CarId,
-                    Model = g.Key.Model,
-                    BrandName = g.Key.BrandName,
-                    TotalSold = g.Count(),
-                    TotalRevenue = g.Sum(s => s.SalePrice)
-                })
-                .OrderByDescending(tc => tc.TotalSold)
-                .Take(count)
-                .ToListAsync();
+            try
+            {
+                var topCars = await _repo.Sales.GetAllSales()
+                    .Include(s => s.Car)
+                    .ThenInclude(c => c.Brand)
+                    .GroupBy(s => new { s.CarId, s.Car.Model, s.Car.Brand.BrandName })
+                    .Select(g => new TopSellingCarDto
+                    {
+                        CarId = g.Key.CarId,
+                        Model = g.Key.Model,
+                        BrandName = g.Key.BrandName,
+                        TotalSold = g.Count(),
+                        TotalRevenue = g.Sum(s => s.SalePrice)
+                    })
+                    .OrderByDescending(tc => tc.TotalSold)
+                    .Take(count)
+                    .ToListAsync();
 
-            return topCars;
+                return topCars;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetTopSellingCarsAsync: {ex.Message}");
+                return new List<TopSellingCarDto>();
+            }
         }
-
-
     }
 }

@@ -27,9 +27,9 @@ namespace CarDealershipAPI.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<ActionResult<Users>>  Register(Users userDto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto userDto)
         {
-            var user = await _authService.Register(userDto);
+            var user = await _authService.RegisterAsync(userDto);
 
             if (user == null)
             {
@@ -41,9 +41,9 @@ namespace CarDealershipAPI.Controllers
 
         [HttpPost("Login")]
 
-        public async Task<ActionResult<string>> Login(LoginDto userDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto userDto)
         {
-            var token = await _authService.Login(userDto);
+            var token = await _authService.LoginAsync(userDto);
             if (token == null)
             {
                 return BadRequest("Invalid username or password");

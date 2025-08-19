@@ -2,91 +2,95 @@
 using CarDealershipBLL.Interfaces;
 using CarDealershipDAL.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+
 
 namespace CarDealershipBLL.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly AppDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _config;
 
-        public AuthService(AppDbContext context, IConfiguration config)
+        public AuthService(UserManager<AppUser> userManager,
+                           RoleManager<IdentityRole> roleManager,
+                           IConfiguration config)
         {
-            _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
             _config = config;
         }
 
-
-        public async Task<Users?> Register(Users userDto)
+        public async Task<string> RegisterAsync(RegisterDto model)
         {
-
-            if(await _context.Users.AnyAsync(u => u.UserName == userDto.UserName))
+            var user = new AppUser
             {
-                return null;
+                UserName = model.Email,
+                Email = model.Email,
+                FullName = model.FullName,
+                Role = model.Role,
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                if (!await _roleManager.RoleExistsAsync(model.Role))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(model.Role));
+                }
+
+                await _userManager.AddToRoleAsync(user, model.Role);
+
+                return $"User created successfully with role {model.Role}";
             }
 
-
-
-            var user = new Users();
-            var hashedPassword = new PasswordHasher<Users>().HashPassword(user, userDto.Password);
-
-            user.UserName = userDto.UserName;
-            user.Password = hashedPassword;
-            user.Role = string.IsNullOrWhiteSpace(userDto.Role) ? "Buyer" : userDto.Role;
-
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return user;
+            return string.Join("; ", result.Errors.Select(e => e.Description));
         }
 
-
-        public async Task<string> Login(LoginDto userDto)
+        public async Task<AuthResponseDto> LoginAsync(LoginDto model)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == userDto.UserName);
-
-            if (user is null)
-            {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
                 return null;
-            }
-            if (new PasswordHasher<Users>().VerifyHashedPassword(user, user.Password, userDto.Password) == PasswordVerificationResult.Failed)
-            {
-                return null;
-            }
 
-            return CreateToken(user);
-        }
+            var roles = await _userManager.GetRolesAsync(user);
 
-        private string CreateToken(Users user)
-        {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role , user.Role)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("UserId", user.Id),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: _config["JWT:Issuer"],
+                audience: _config["JWT:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
+                expires: DateTime.Now.AddHours(2),
                 signingCredentials: creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new AuthResponseDto
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                Expiration = token.ValidTo,
+                Role = roles.FirstOrDefault() ?? "User"
+            };
         }
-
     }
 }

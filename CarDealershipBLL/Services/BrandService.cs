@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CarDealershipBLL.Services
@@ -17,7 +16,7 @@ namespace CarDealershipBLL.Services
         private readonly IMapper _mapper;
         private readonly IRepoWrapper _repo;
 
-        public BrandService(IMapper mapper , IRepoWrapper repo)
+        public BrandService(IMapper mapper, IRepoWrapper repo)
         {
             _mapper = mapper;
             _repo = repo;
@@ -25,64 +24,94 @@ namespace CarDealershipBLL.Services
 
         public async Task<IEnumerable<BrandDto>> GetAllBrandsAsync()
         {
-            var brands = await _repo.Brands.GetAllBrands().Select(B => new BrandDto
+            try
             {
-                Id = B.BrandId,
-                BrandName = B.BrandName,    
-            }).ToListAsync();
+                var brands = await _repo.Brands.GetAllBrands()
+                    .Select(B => new BrandDto
+                    {
+                        Id = B.BrandId,
+                        BrandName = B.BrandName,
+                    }).ToListAsync();
 
-            return brands;
-
+                return brands;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error while getting all brands", ex);
+            }
         }
-
-
 
         public async Task<BrandDto> GetBrandByIdAsync(int id)
         {
-            var brands = await _repo.Brands.GetBrandById(id).Select(B => new BrandDto
+            try
             {
-                Id = B.BrandId,
-                BrandName = B.BrandName,
+                var brand = await _repo.Brands.GetBrandById(id)
+                    .Select(B => new BrandDto
+                    {
+                        Id = B.BrandId,
+                        BrandName = B.BrandName,
+                    }).FirstOrDefaultAsync();
 
-            }).FirstOrDefaultAsync();
-            
-            return brands;
+                return brand;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error while getting brand with id {id}", ex);
+            }
         }
-
-
-
 
         public async Task<BrandDto> CreateBrandAsync(BrandDto brandDto)
         {
-            var newBrand = _mapper.Map<Brand>(brandDto);
+            try
+            {
+                var newBrand = _mapper.Map<Brand>(brandDto);
 
-            await _repo.Brands.AddAsync(newBrand);
-            await _repo.SaveAsync();
-            return _mapper.Map<BrandDto>(newBrand);
+                await _repo.Brands.AddAsync(newBrand);
+                await _repo.SaveAsync();
+
+                return _mapper.Map<BrandDto>(newBrand);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error while creating brand", ex);
+            }
         }
 
         public async Task<bool> DeleteBrandAsync(int id)
         {
-            var brand = await _repo.Brands.GetByIdAsync(id);
-            if (brand == null) return false;
+            try
+            {
+                var brand = await _repo.Brands.GetByIdAsync(id);
+                if (brand == null) return false;
 
-            _repo.Brands.DeleteAsync(brand);
-            await _repo.SaveAsync();
-            return true;
+                _repo.Brands.DeleteAsync(brand);
+                await _repo.SaveAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error while deleting brand with id {id}", ex);
+            }
         }
-
-
-
-
 
         public async Task<bool> UpdateBrandAsync(int id, BrandDto brandDto)
         {
-            var brand = await _repo.Brands.GetByIdAsync(id);
-            if (brand == null) return false;
-            _mapper.Map(brandDto, brand);
-            _repo.Brands.UpdateAsync(brand);
-            await _repo.SaveAsync();
-            return true;
+            try
+            {
+                var brand = await _repo.Brands.GetByIdAsync(id);
+                if (brand == null) return false;
+
+                _mapper.Map(brandDto, brand);
+                _repo.Brands.UpdateAsync(brand);
+                await _repo.SaveAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error while updating brand with id {id}", ex);
+            }
         }
     }
 }
